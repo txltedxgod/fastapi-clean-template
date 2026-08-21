@@ -1,5 +1,11 @@
 # fastapi-clean-template
 
+[![Python CI](https://github.com/txltedxgod/fastapi-clean-template/actions/workflows/ci.yml/badge.svg)](https://github.com/txltedxgod/fastapi-clean-template/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![SQLAlchemy 2.0](https://img.shields.io/badge/SQLAlchemy-2.0_Async-D71E00.svg)](https://www.sqlalchemy.org/)
+
+
 Enterprise-grade production FastAPI boilerplate with Clean Architecture, Domain-Driven Design (DDD), and async services.
 
 ## Architecture & Design
