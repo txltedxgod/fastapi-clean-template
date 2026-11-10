@@ -1,7 +1,19 @@
-def test_user_lifecycle(client):
-    res = client.post("/api/v1/users", json={"email": "dev@company.io", "full_name": "Dev User", "role": "admin"})
-    assert res.status_code == 201
-    user_id = res.json()["id"]
-    get_res = client.get(f"/api/v1/users/{user_id}")
-    assert get_res.status_code == 200
-    assert get_res.json()["email"] == "dev@company.io"
+"""Unit tests for the application domain UserService and User entity defaults."""
+
+import time
+
+from app.services.user_service import UserService
+
+
+def test_user_service() -> None:
+    s = UserService()
+    u = s.create_user("alex@example.com", "Alex Developer", "admin")
+    assert u.id is not None
+    assert u.role == "admin"
+    assert len(s.list_users()) == 1
+
+    time.sleep(0.01)
+    u2 = s.create_user("bob@example.com", "Bob Builder")
+    assert u2.created_at > u.created_at
+    assert s.delete_user(u.id) is True
+    assert s.get_user(u.id) is None
