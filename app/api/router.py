@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+
 from app.services.user_service import UserService
 
 app = FastAPI(title="Clean Architecture API", version="1.0.0")

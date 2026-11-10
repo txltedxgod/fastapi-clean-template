@@ -1,16 +1,26 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import time
-import logging
+"""FastAPI application entrypoint with Clean Architecture middleware and error mapping."""
 
+from __future__ import annotations
+
+import logging
+import time
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from src.api.v1.router import router as v1_router
 from src.core.config import settings
 from src.core.exceptions import AppException
-from src.api.v1.router import router as v1_router
+from src.core.middleware import CorrelationIdMiddleware
 
-logging.basicConfig(level=settings.log_level, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+logging.basicConfig(
+    level=settings.log_level,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
 logger = logging.getLogger("fastapi_clean_template")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,8 +28,17 @@ async def lifespan(app: FastAPI):
     yield
     logger.info("Shutting down %s...", settings.app_name)
 
+
 app = FastAPI(title=settings.app_name, version="1.0.0", lifespan=lifespan)
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.middleware("http")
 async def add_process_time(request: Request, call_next):
@@ -29,12 +48,19 @@ async def add_process_time(request: Request, call_next):
     response.headers["X-Response-Time-Ms"] = f"{duration_ms:.2f}"
     return response
 
+
 @app.exception_handler(AppException)
-async def app_exception_handler(request: Request, exc: AppException):
-    return JSONResponse(status_code=exc.status_code, content={"error": {"type": exc.__class__.__name__, "message": exc.message}})
+async def app_exception_handler(request: Request, exc: AppException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": {"type": exc.__class__.__name__, "message": exc.message}},
+    )
+
 
 app.include_router(v1_router)
 
+
 @app.get("/health", tags=["System"])
-def health():
+def health() -> dict[str, str]:
+    """Liveness healthcheck endpoint."""
     return {"status": "healthy", "service": settings.app_name}
